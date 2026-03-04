@@ -369,7 +369,7 @@ function startServer() {
         if (!fs.existsSync(filePath)) {
             return res.status(404).json({
                 success: false,
-                message: 'RDX Bot file not available yet! Please wait for new update.'
+                message: 'Empty! Not Available Yet. Wait For New Update'
             });
         }
 
@@ -403,7 +403,7 @@ function startServer() {
         if (!fs.existsSync(filePath)) {
             return res.status(404).json({
                 success: false,
-                message: 'C3C Extension file not available yet! Please wait for new update.'
+                message: 'Empty! Not Available Yet. Wait For New Update'
             });
         }
 
