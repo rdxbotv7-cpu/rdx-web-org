@@ -1639,6 +1639,22 @@
                 document.getElementById('loginModal').style.display = 'flex';
             } else {
                 event.preventDefault();
+                checkAndDownload(type);
+            }
+        }
+
+        // ============================================
+        async function checkAndDownload(type) {
+            try {
+                const response = await fetch(`/download/${type}`);
+
+                if (!response.ok) {
+                    const data = await response.json();
+                    showAlert('❌ ' + (data.message || 'File not available yet! Please wait for new update.'));
+                    return;
+                }
+
+                // File exists, proceed with download
                 if (type === 'rdx') {
                     recordDownload('rdx');
                     window.open(RDX_BOT_LINK, '_blank');
@@ -1646,7 +1662,55 @@
                     recordDownload('c3c');
                     window.open(C3C_EXTENSION_LINK, '_blank');
                 }
+            } catch (error) {
+                console.error('Download error:', error);
+                showAlert('❌ File not available yet! Please wait for new update.');
             }
+        }
+
+        // ============================================
+        function showAlert(message) {
+            const alertDiv = document.createElement('div');
+            alertDiv.style.cssText = `
+                position: fixed;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                color: white;
+                padding: 30px 50px;
+                border-radius: 20px;
+                font-size: 18px;
+                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                z-index: 10000;
+                box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+                text-align: center;
+                animation: shake 0.5s ease-in-out;
+            `;
+            alertDiv.innerHTML = `
+                <div style="font-size: 50px; margin-bottom: 15px;">⚠️</div>
+                <div>${message}</div>
+                <div style="margin-top: 20px; font-size: 14px; opacity: 0.8;">Click anywhere to close</div>
+            `;
+
+            // Add shake animation
+            const style = document.createElement('style');
+            style.textContent = `
+                @keyframes shake {
+                    0%, 100% { transform: translate(-50%, -50%) rotate(0deg); }
+                    25% { transform: translate(-50%, -50%) rotate(-5deg); }
+                    75% { transform: translate(-50%, -50%) rotate(5deg); }
+                }
+            `;
+            document.head.appendChild(style);
+
+            alertDiv.onclick = () => alertDiv.remove();
+            document.body.appendChild(alertDiv);
+
+            // Auto close after 5 seconds
+            setTimeout(() => {
+                if (alertDiv.parentNode) alertDiv.remove();
+            }, 5000);
         }
 
         // ============================================
