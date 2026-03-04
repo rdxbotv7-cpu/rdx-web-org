@@ -1,14 +1,30 @@
-const sqlite3 = require('sqlite3').verbose();
+const initSqlJs = require('sql.js');
 
-// Create database connection
-const db = new sqlite3.Database('./bothub.db', (err) => {
-    if (err) {
-        console.error('Error opening database:', err.message);
-    } else {
-        console.log('Connected to SQLite database.');
-        initializeTables();
+let db = null;
+
+// Initialize database
+async function initDatabase() {
+    const SQL = await initSqlJs();
+
+    // Try to load existing database
+    try {
+        const fs = require('fs');
+        if (fs.existsSync('./bothub.db')) {
+            const fileBuffer = fs.readFileSync('./bothub.db');
+            db = new SQL.Database(fileBuffer);
+            console.log('Loaded existing database.');
+        } else {
+            db = new SQL.Database();
+            console.log('Created new database.');
+        }
+    } catch (err) {
+        console.log('Error loading database, creating new one:', err.message);
+        db = new SQL.Database();
     }
-});
+
+    initializeTables();
+    return db;
+}
 
 // Initialize database tables
 function initializeTables() {
@@ -24,11 +40,7 @@ function initializeTables() {
             verification_expires DATETIME,
             created_at DATETIME DEFAULT CURRENT_TIMESTAMP
         )
-    `, (err) => {
-        if (err) {
-            console.error('Error creating users table:', err.message);
-        }
-    });
+    `);
 
     // Downloads table for tracking
     db.run(`
@@ -40,32 +52,12 @@ function initializeTables() {
             download_time DATETIME DEFAULT CURRENT_TIMESTAMP,
             FOREIGN KEY (user_id) REFERENCES users(id)
         )
-    `, (err) => {
-        if (err) {
-            console.error('Error creating downloads table:', err.message);
-        } else {
-            // Check if download_type column exists, if not add it
-            db.all("PRAGMA table_info(downloads)", (err, columns) => {
-                if (!err && columns) {
-                    const hasDownloadType = columns.some(col => col.name === 'download_type');
-                    if (!hasDownloadType) {
-                        db.run("ALTER TABLE downloads ADD COLUMN download_type TEXT DEFAULT 'rdx'", (err) => {
-                            if (err) console.log('Column may already exist:', err.message);
-                        });
-                    }
-                }
-            });
-        }
-    });
+    `);
 
     // Create index for faster counting
     db.run(`
         CREATE INDEX IF NOT EXISTS idx_downloads_date ON downloads(download_date)
-    `, (err) => {
-        if (err) {
-            console.error('Error creating index:', err.message);
-        }
-    });
+    `);
 
     // GitHub clones table
     db.run(`
@@ -74,43 +66,76 @@ function initializeTables() {
             clone_date DATE DEFAULT CURRENT_DATE,
             clone_time DATETIME DEFAULT CURRENT_TIMESTAMP
         )
-    `, (err) => {
-        if (err) {
-            console.error('Error creating github_clones table:', err.message);
-        }
-    });
+    `);
 
+    // Save database to file
+    saveDatabase();
     console.log('Database tables initialized.');
+}
+
+// Save database to file
+function saveDatabase() {
+    try {
+        const fs = require('fs');
+        const data = db.export();
+        const buffer = Buffer.from(data);
+        fs.writeFileSync('./bothub.db', buffer);
+    } catch (err) {
+        console.error('Error saving database:', err.message);
+    }
 }
 
 // User functions
 function createUser(username, email, password, callback) {
-    const sql = 'INSERT INTO users (username, email, password) VALUES (?, ?, ?)';
-    db.run(sql, [username, email, password], function (err) {
-        if (err) {
-            callback(err, null);
-        } else {
-            callback(null, { id: this.lastID, username, email });
-        }
-    });
+    try {
+        const sql = 'INSERT INTO users (username, email, password) VALUES (?, ?, ?)';
+        db.run(sql, [username, email, password]);
+        const result = db.exec('SELECT last_insert_rowid() as id');
+        const id = result[0]?.values[0]?.[0] || 0;
+        saveDatabase();
+        callback(null, { id, username, email });
+    } catch (err) {
+        callback(err, null);
+    }
 }
 
 function findUserByEmail(email, callback) {
-    const sql = 'SELECT * FROM users WHERE email = ?';
-    db.get(sql, [email], (err, row) => {
-        callback(err, row);
-    });
+    try {
+        const sql = 'SELECT * FROM users WHERE email = ?';
+        const stmt = db.prepare(sql);
+        stmt.bind([email]);
+        if (stmt.step()) {
+            const row = stmt.getAsObject();
+            stmt.free();
+            callback(null, row);
+        } else {
+            stmt.free();
+            callback(null, null);
+        }
+    } catch (err) {
+        callback(err, null);
+    }
 }
 
 function findUserByUsername(username, callback) {
-    const sql = 'SELECT * FROM users WHERE username = ?';
-    db.get(sql, [username], (err, row) => {
-        callback(err, row);
-    });
+    try {
+        const sql = 'SELECT * FROM users WHERE username = ?';
+        const stmt = db.prepare(sql);
+        stmt.bind([username]);
+        if (stmt.step()) {
+            const row = stmt.getAsObject();
+            stmt.free();
+            callback(null, row);
+        } else {
+            stmt.free();
+            callback(null, null);
+        }
+    } catch (err) {
+        callback(err, null);
+    }
 }
 
 function findUserByEmailOrUsername(loginInput, callback) {
-    // Check if input is email or username
     const isEmail = loginInput.includes('@');
     let sql, params;
 
@@ -122,122 +147,176 @@ function findUserByEmailOrUsername(loginInput, callback) {
         params = [loginInput];
     }
 
-    db.get(sql, params, (err, row) => {
-        callback(err, row);
-    });
+    try {
+        const stmt = db.prepare(sql);
+        stmt.bind(params);
+        if (stmt.step()) {
+            const row = stmt.getAsObject();
+            stmt.free();
+            callback(null, row);
+        } else {
+            stmt.free();
+            callback(null, null);
+        }
+    } catch (err) {
+        callback(err, null);
+    }
 }
 
 // Download functions
 function recordDownload(userId, downloadType, callback) {
-    const sql = 'INSERT INTO downloads (user_id, download_type) VALUES (?, ?)';
-    db.run(sql, [userId, downloadType || 'rdx'], function (err) {
+    try {
+        const sql = 'INSERT INTO downloads (user_id, download_type) VALUES (?, ?)';
+        db.run(sql, [userId, downloadType || 'rdx']);
+        saveDatabase();
+        callback(null);
+    } catch (err) {
         callback(err);
-    });
+    }
 }
 
 function getTotalDownloads(callback) {
-    const sql = 'SELECT COUNT(*) as count FROM downloads';
-    db.get(sql, (err, row) => {
-        callback(err, row ? row.count : 0);
-    });
+    try {
+        const sql = 'SELECT COUNT(*) as count FROM downloads';
+        const result = db.exec(sql);
+        const count = result[0]?.values[0]?.[0] || 0;
+        callback(null, count);
+    } catch (err) {
+        callback(err, 0);
+    }
 }
 
 function getDownloadsByType(callback) {
-    const sql = "SELECT download_type, COUNT(*) as count FROM downloads GROUP BY download_type";
-    db.all(sql, (err, rows) => {
-        if (err) {
-            callback(err, { rdx: 0, c3c: 0 });
-        } else {
-            const result = { rdx: 0, c3c: 0 };
-            rows.forEach(row => {
-                if (row.download_type === 'rdx') result.rdx = row.count;
-                if (row.download_type === 'c3c') result.c3c = row.count;
+    try {
+        const sql = "SELECT download_type, COUNT(*) as count FROM downloads GROUP BY download_type";
+        const result = db.exec(sql);
+        const resultObj = { rdx: 0, c3c: 0 };
+        if (result[0]) {
+            result[0].values.forEach(row => {
+                if (row[0] === 'rdx') resultObj.rdx = row[1];
+                if (row[0] === 'c3c') resultObj.c3c = row[1];
             });
-            callback(err, result);
         }
-    });
+        callback(null, resultObj);
+    } catch (err) {
+        callback(err, { rdx: 0, c3c: 0 });
+    }
 }
 
 function getTodayDownloads(callback) {
-    const sql = "SELECT COUNT(*) as count FROM downloads WHERE download_date = date('now')";
-    db.get(sql, (err, row) => {
-        callback(err, row ? row.count : 0);
-    });
+    try {
+        const sql = "SELECT COUNT(*) as count FROM downloads WHERE download_date = date('now')";
+        const result = db.exec(sql);
+        const count = result[0]?.values[0]?.[0] || 0;
+        callback(null, count);
+    } catch (err) {
+        callback(err, 0);
+    }
 }
 
 function getUserCount(callback) {
-    const sql = 'SELECT COUNT(*) as count FROM users';
-    db.get(sql, (err, row) => {
-        callback(err, row ? row.count : 0);
-    });
+    try {
+        const sql = 'SELECT COUNT(*) as count FROM users';
+        const result = db.exec(sql);
+        const count = result[0]?.values[0]?.[0] || 0;
+        callback(null, count);
+    } catch (err) {
+        callback(err, 0);
+    }
 }
 
 // GitHub clone functions
 function recordGithubClone(callback) {
-    const sql = 'INSERT INTO github_clones (clone_date) VALUES (date("now"))';
-    db.run(sql, function (err) {
+    try {
+        const sql = 'INSERT INTO github_clones (clone_date) VALUES (date("now"))';
+        db.run(sql);
+        saveDatabase();
+        callback(null);
+    } catch (err) {
         callback(err);
-    });
+    }
 }
 
 function getGithubCloneCount(callback) {
-    const sql = 'SELECT COUNT(*) as count FROM github_clones';
-    db.get(sql, (err, row) => {
-        callback(err, row ? row.count : 0);
-    });
+    try {
+        const sql = 'SELECT COUNT(*) as count FROM github_clones';
+        const result = db.exec(sql);
+        const count = result[0]?.values[0]?.[0] || 0;
+        callback(null, count);
+    } catch (err) {
+        callback(err, 0);
+    }
 }
 
 // Verification functions
 function setVerificationCode(email, code, expires, callback) {
-    const sql = 'UPDATE users SET verification_code = ?, verification_expires = ? WHERE email = ?';
-    db.run(sql, [code, expires, email], function (err) {
+    try {
+        const sql = 'UPDATE users SET verification_code = ?, verification_expires = ? WHERE email = ?';
+        db.run(sql, [code, expires, email]);
+        saveDatabase();
+        callback(null);
+    } catch (err) {
         callback(err);
-    });
+    }
 }
 
 function verifyCode(email, code, callback) {
-    const sql = 'SELECT * FROM users WHERE email = ? AND verification_code = ? AND verification_expires > datetime("now")';
-    db.get(sql, [email, code], (err, row) => {
-        if (err || !row) {
-            callback(err, false);
+    try {
+        const sql = 'SELECT * FROM users WHERE email = ? AND verification_code = ? AND verification_expires > datetime("now")';
+        const stmt = db.prepare(sql);
+        stmt.bind([email, code]);
+        if (stmt.step()) {
+            const row = stmt.getAsObject();
+            stmt.free();
+            callback(null, row);
         } else {
-            // Mark as verified
-            db.run('UPDATE users SET is_verified = 1, verification_code = NULL, verification_expires = NULL WHERE email = ?', [email], (err2) => {
-                callback(err2, true);
-            });
+            stmt.free();
+            callback(null, null);
         }
-    });
+    } catch (err) {
+        callback(err, null);
+    }
 }
 
-function isUserVerified(email, callback) {
-    const sql = 'SELECT is_verified FROM users WHERE email = ?';
-    db.get(sql, [email], (err, row) => {
-        callback(err, row ? row.is_verified === 1 : false);
-    });
+function markUserVerified(email, callback) {
+    try {
+        const sql = 'UPDATE users SET is_verified = 1, verification_code = NULL, verification_expires = NULL WHERE email = ?';
+        db.run(sql, [email]);
+        saveDatabase();
+        callback(null);
+    } catch (err) {
+        callback(err);
+    }
 }
 
-function getUserById(userId, callback) {
-    const sql = 'SELECT * FROM users WHERE id = ?';
-    db.get(sql, [userId], (err, row) => {
-        callback(err, row);
-    });
+function updatePassword(email, newPassword, callback) {
+    try {
+        const sql = 'UPDATE users SET password = ? WHERE email = ?';
+        db.run(sql, [newPassword, email]);
+        saveDatabase();
+        callback(null);
+    } catch (err) {
+        callback(err);
+    }
 }
 
+// Export functions
 module.exports = {
-    db,
+    initDatabase,
     createUser,
     findUserByEmail,
     findUserByUsername,
     findUserByEmailOrUsername,
     recordDownload,
     getTotalDownloads,
+    getDownloadsByType,
     getTodayDownloads,
     getUserCount,
-    getDownloadsByType,
     recordGithubClone,
     getGithubCloneCount,
     setVerificationCode,
     verifyCode,
-    isUserVerified,
-    getUserById
+    markUserVerified,
+    updatePassword,
+    getDb: () => db
 };
