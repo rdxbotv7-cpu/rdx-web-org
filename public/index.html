@@ -1,0 +1,1130 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BotHub - Download Premium Bot</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+    <!-- Font Awesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        /* ============================================
+           CSS VARIABLES & RESET
+           ============================================ */
+        :root {
+            --primary-color: #6366f1;
+            --primary-hover: #4f46e5;
+            --secondary-color: #ec4899;
+            --accent-color: #06b6d4;
+            --dark-bg: #0f0f23;
+            --card-bg: rgba(255, 255, 255, 0.05);
+            --card-border: rgba(255, 255, 255, 0.1);
+            --text-primary: #ffffff;
+            --text-secondary: #94a3b8;
+            --error-color: #ef4444;
+            --success-color: #10b981;
+            --glass-bg: rgba(255, 255, 255, 0.08);
+            --glass-border: rgba(255, 255, 255, 0.15);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        body {
+            min-height: 100vh;
+            background: var(--dark-bg);
+            background-image:
+                radial-gradient(ellipse at top left, rgba(99, 102, 241, 0.15) 0%, transparent 50%),
+                radial-gradient(ellipse at bottom right, rgba(236, 72, 153, 0.15) 0%, transparent 50%),
+                radial-gradient(ellipse at top right, rgba(6, 182, 212, 0.1) 0%, transparent 40%),
+                linear-gradient(180deg, #0f0f23 0%, #1a1a3e 100%);
+            color: var(--text-primary);
+            overflow-x: hidden;
+        }
+
+        /* ============================================
+           HEADER STYLES
+           ============================================ */
+        .header {
+            padding: 1.5rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(15, 15, 35, 0.8);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--glass-border);
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 1.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .logo i {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-size: 1.8rem;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .btn-logout {
+            padding: 0.6rem 1.2rem;
+            background: transparent;
+            border: 1px solid var(--card-border);
+            color: var(--text-secondary);
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+            display: none;
+        }
+
+        .btn-logout:hover {
+            background: rgba(239, 68, 68, 0.1);
+            border-color: var(--error-color);
+            color: var(--error-color);
+        }
+
+        .btn-logout.active {
+            display: block;
+        }
+
+        /* ============================================
+           MAIN CONTAINER
+           ============================================ */
+        .main-container {
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 6rem 2rem 2rem;
+        }
+
+        /* ============================================
+           CARD STYLES (Glassmorphism)
+           ============================================ */
+        .card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+            padding: 3rem;
+            width: 100%;
+            max-width: 450px;
+            box-shadow:
+                0 25px 50px -12px rgba(0, 0, 0, 0.5),
+                0 0 0 1px rgba(255, 255, 255, 0.05),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            animation: fadeInUp 0.6s ease-out;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .card-title {
+            font-size: 1.8rem;
+            font-weight: 700;
+            text-align: center;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(135deg, var(--text-primary), var(--text-secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .card-subtitle {
+            text-align: center;
+            color: var(--text-secondary);
+            margin-bottom: 2rem;
+            font-size: 0.95rem;
+        }
+
+        /* ============================================
+           FORM STYLES
+           ============================================ */
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.6rem;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        .input-wrapper {
+            position: relative;
+        }
+
+        .input-wrapper i {
+            position: absolute;
+            left: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-secondary);
+            font-size: 1rem;
+            transition: color 0.3s ease;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 14px 14px 14px 48px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--card-border);
+            border-radius: 12px;
+            color: var(--text-primary);
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            outline: none;
+        }
+
+        .form-input:focus {
+            border-color: var(--primary-color);
+            background: rgba(99, 102, 241, 0.1);
+            box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.15);
+        }
+
+        .form-input:focus+i,
+        .input-wrapper:focus-within i {
+            color: var(--primary-color);
+        }
+
+        .form-input::placeholder {
+            color: rgba(148, 163, 184, 0.5);
+        }
+
+        .form-input.error {
+            border-color: var(--error-color);
+            box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.15);
+        }
+
+        .error-message {
+            color: var(--error-color);
+            font-size: 0.8rem;
+            margin-top: 0.5rem;
+            display: none;
+        }
+
+        .error-message.show {
+            display: block;
+            animation: shake 0.4s ease;
+        }
+
+        @keyframes shake {
+
+            0%,
+            100% {
+                transform: translateX(0);
+            }
+
+            25% {
+                transform: translateX(-5px);
+            }
+
+            75% {
+                transform: translateX(5px);
+            }
+        }
+
+        /* ============================================
+           BUTTON STYLES
+           ============================================ */
+        .btn {
+            width: 100%;
+            padding: 16px;
+            border: none;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary-color), var(--primary-hover));
+            color: white;
+            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(99, 102, 241, 0.5);
+        }
+
+        .btn-primary:active {
+            transform: translateY(0);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-download {
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+            font-size: 1.2rem;
+            padding: 20px 40px;
+            box-shadow: 0 4px 20px rgba(16, 185, 129, 0.4);
+            position: relative;
+            overflow: hidden;
+            text-decoration: none;
+        }
+
+        .btn-download::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            transition: left 0.5s ease;
+        }
+
+        .btn-download:hover::before {
+            left: 100%;
+        }
+
+        .btn-download:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 30px rgba(16, 185, 129, 0.5);
+        }
+
+        .btn-download i {
+            font-size: 1.4rem;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(1.1);
+            }
+        }
+
+        /* ============================================
+           DOWNLOAD PAGE STYLES
+           ============================================ */
+        .download-page {
+            display: none;
+            text-align: center;
+        }
+
+        .download-page.active {
+            display: block;
+            animation: fadeInUp 0.6s ease-out;
+        }
+
+        .bot-preview {
+            width: 120px;
+            height: 120px;
+            margin: 0 auto 2rem;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            border-radius: 24px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 3rem;
+            box-shadow: 0 20px 40px rgba(99, 102, 241, 0.3);
+            animation: float 3s ease-in-out infinite;
+        }
+
+        @keyframes float {
+
+            0%,
+            100% {
+                transform: translateY(0);
+            }
+
+            50% {
+                transform: translateY(-10px);
+            }
+        }
+
+        .bot-info {
+            margin-bottom: 2rem;
+        }
+
+        .bot-name {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .bot-description {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            line-height: 1.6;
+        }
+
+        /* ============================================
+           DOWNLOAD COUNTER STYLES
+           ============================================ */
+        .counter-section {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            margin-top: 2rem;
+            padding-top: 2rem;
+            border-top: 1px solid var(--card-border);
+        }
+
+        .counter-item {
+            text-align: center;
+        }
+
+        .counter-number {
+            font-size: 2.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--accent-color), var(--primary-color));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .counter-label {
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            margin-top: 0.3rem;
+        }
+
+        /* ============================================
+           FOOTER STYLES
+           ============================================ */
+        .footer {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 1rem;
+            text-align: center;
+            background: rgba(15, 15, 35, 0.8);
+            backdrop-filter: blur(10px);
+            border-top: 1px solid var(--glass-border);
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+        }
+
+        .footer a {
+            color: var(--primary-color);
+            text-decoration: none;
+        }
+
+        .footer a:hover {
+            text-decoration: underline;
+        }
+
+        /* ============================================
+           PAGE TRANSITIONS
+           ============================================ */
+        .signup-page {
+            display: block;
+        }
+
+        .signup-page.hidden {
+            display: none;
+        }
+
+        /* ============================================
+           SUCCESS MESSAGE
+           ============================================ */
+        .success-message {
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid var(--success-color);
+            border-radius: 12px;
+            padding: 1rem;
+            margin-bottom: 1.5rem;
+            color: var(--success-color);
+            display: none;
+            text-align: center;
+            animation: fadeInUp 0.4s ease;
+        }
+
+        .success-message.show {
+            display: block;
+        }
+
+        /* ============================================
+           LOADING SPINNER
+           ============================================ */
+        .spinner {
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top: 2px solid white;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+            display: none;
+        }
+
+        .btn.loading .spinner {
+            display: block;
+        }
+
+        .btn.loading .btn-text {
+            display: none;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* ============================================
+           RESPONSIVE DESIGN
+           ============================================ */
+        @media (max-width: 768px) {
+            .header {
+                padding: 1rem 1.5rem;
+            }
+
+            .logo {
+                font-size: 1.3rem;
+            }
+
+            .main-container {
+                padding: 5rem 1rem 4rem;
+            }
+
+            .card {
+                padding: 2rem 1.5rem;
+                border-radius: 20px;
+            }
+
+            .card-title {
+                font-size: 1.5rem;
+            }
+
+            .counter-section {
+                flex-direction: column;
+                gap: 1.5rem;
+            }
+
+            .btn-download {
+                padding: 18px 30px;
+                font-size: 1.1rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .logo {
+                font-size: 1.1rem;
+            }
+
+            .logo i {
+                font-size: 1.4rem;
+            }
+
+            .card-title {
+                font-size: 1.3rem;
+            }
+
+            .counter-number {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="logo">
+            <i class="fas fa-robot"></i>
+            <span>BotHub</span>
+        </div>
+        <div class="header-actions">
+            <button class="btn-logout" id="logoutBtn" onclick="playButtonSound(); logout()">
+                <i class="fas fa-sign-out-alt"></i> Logout
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="main-container">
+        <!-- Signup Page -->
+        <div class="card signup-page" id="signupPage">
+            <h1 class="card-title">Create Account</h1>
+            <p class="card-subtitle">Sign up to access the download page</p>
+
+            <div class="success-message" id="successMessage">
+                <i class="fas fa-check-circle"></i> <span id="successText">Account created successfully!</span>
+            </div>
+
+            <form id="signupForm" onsubmit="handleSignup(event)">
+                <div class="form-group">
+                    <label for="username">Username</label>
+                    <div class="input-wrapper">
+                        <input type="text" id="username" class="form-input" placeholder="Enter your username"
+                            autocomplete="username">
+                        <i class="fas fa-user"></i>
+                    </div>
+                    <p class="error-message" id="usernameError">Username is required</p>
+                </div>
+
+                <div class="form-group">
+                    <label for="email">Email Address</label>
+                    <div class="input-wrapper">
+                        <input type="email" id="email" class="form-input" placeholder="Enter your email"
+                            autocomplete="email">
+                        <i class="fas fa-envelope"></i>
+                    </div>
+                    <p class="error-message" id="emailError">Valid email is required</p>
+                </div>
+
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <div class="input-wrapper">
+                        <input type="password" id="password" class="form-input"
+                            placeholder="Enter password (min 6 characters)" autocomplete="new-password">
+                        <i class="fas fa-lock"></i>
+                    </div>
+                    <p class="error-message" id="passwordError">Password must be at least 6 characters</p>
+                </div>
+
+                <button type="submit" class="btn btn-primary" id="signupBtn">
+                    <span class="btn-text"><i class="fas fa-user-plus"></i> Create Account</span>
+                    <div class="spinner"></div>
+                </button>
+            </form>
+
+            <p style="text-align: center; margin-top: 1.5rem; color: var(--text-secondary); font-size: 0.9rem;">
+                Already have an account?
+                <a href="#" onclick="playButtonSound(); showLogin(); return false;"
+                    style="color: var(--primary-color); text-decoration: none;">Login</a>
+            </p>
+        </div>
+
+        <!-- Login Page -->
+        <div class="card signup-page" id="loginPage" style="display: none;">
+            <h1 class="card-title">Welcome Back</h1>
+            <p class="card-subtitle">Login to access the download page</p>
+
+            <div class="success-message" id="loginSuccessMessage">
+                <i class="fas fa-check-circle"></i> <span id="loginSuccessText">Login successful!</span>
+            </div>
+
+            <form id="loginForm" onsubmit="handleLogin(event)">
+                <div class="form-group">
+                    <label for="loginEmail">Email Address</label>
+                    <div class="input-wrapper">
+                        <input type="email" id="loginEmail" class="form-input" placeholder="Enter your email"
+                            autocomplete="email">
+                        <i class="fas fa-envelope"></i>
+                    </div>
+                    <p class="error-message" id="loginEmailError">Valid email is required</p>
+                </div>
+
+                <div class="form-group">
+                    <label for="loginPassword">Password</label>
+                    <div class="input-wrapper">
+                        <input type="password" id="loginPassword" class="form-input" placeholder="Enter your password"
+                            autocomplete="current-password">
+                        <i class="fas fa-lock"></i>
+                    </div>
+                    <p class="error-message" id="loginPasswordError">Password is required</p>
+                </div>
+
+                <button type="submit" class="btn btn-primary" id="loginBtn">
+                    <span class="btn-text"><i class="fas fa-sign-in-alt"></i> Login</span>
+                    <div class="spinner"></div>
+                </button>
+            </form>
+
+            <p style="text-align: center; margin-top: 1.5rem; color: var(--text-secondary); font-size: 0.9rem;">
+                Don't have an account?
+                <a href="#" onclick="playButtonSound(); showSignup(); return false;"
+                    style="color: var(--primary-color); text-decoration: none;">Sign up</a>
+            </p>
+        </div>
+
+        <!-- Download Page -->
+        <div class="card download-page" id="downloadPage">
+            <div class="bot-preview">
+                <i class="fas fa-robot"></i>
+            </div>
+
+            <div class="bot-info">
+                <h2 class="bot-name">Premium Bot v2.0</h2>
+                <p class="bot-description">
+                    The ultimate automation tool with advanced features.<br>
+                    Download now and experience seamless performance.
+                </p>
+            </div>
+
+            <!-- MediaFire Download Link - REPLACE WITH YOUR ACTUAL LINK -->
+            <a href="https://www.mediafire.com/file/your-actual-bot-link.zip" target="_blank" class="btn btn-download"
+                id="downloadBtn" onclick="playButtonSound(); handleDownload(event)">
+                <i class="fas fa-download"></i>
+                <span>Download ZIP</span>
+            </a>
+
+            <!-- Download Counter -->
+            <div class="counter-section">
+                <div class="counter-item">
+                    <div class="counter-number" id="downloadCount">0</div>
+                    <div class="counter-label">
+                        <i class="fas fa-download"></i> Total Downloads
+                    </div>
+                </div>
+                <div class="counter-item">
+                    <div class="counter-number" id="todayCount">0</div>
+                    <div class="counter-label">
+                        <i class="fas fa-calendar-day"></i> Today's Downloads
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <p>&copy; 2026 BotHub. All rights reserved. | <a href="#">Privacy Policy</a></p>
+    </footer>
+
+    <!-- JavaScript -->
+    <script>
+        // ============================================
+        // SOUND EFFECTS
+        // ============================================
+        const buttonSound = new Audio('../sound effects/buttons.mpeg');
+        const loginSound = new Audio('../sound effects/login.mpeg');
+
+        function playButtonSound() {
+            buttonSound.currentTime = 0;
+            buttonSound.volume = 0.5;
+            buttonSound.play().catch(e => console.log('Sound play failed:', e));
+        }
+
+        function playLoginSound() {
+            loginSound.currentTime = 0;
+            loginSound.volume = 0.5;
+            loginSound.play().catch(e => console.log('Sound play failed:', e));
+        }
+
+        // ============================================
+        // GLOBAL VARIABLES
+        // ============================================
+
+        // User session
+        let isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
+        let userData = JSON.parse(localStorage.getItem('userData')) || null;
+
+        // ============================================
+        // DOM ELEMENTS
+        // ============================================
+
+        const signupPage = document.getElementById('signupPage');
+        const loginPage = document.getElementById('loginPage');
+        const downloadPage = document.getElementById('downloadPage');
+        const signupForm = document.getElementById('signupForm');
+        const loginForm = document.getElementById('loginForm');
+        const successMessage = document.getElementById('successMessage');
+        const loginSuccessMessage = document.getElementById('loginSuccessMessage');
+        const logoutBtn = document.getElementById('logoutBtn');
+        const downloadCountEl = document.getElementById('downloadCount');
+        const todayCountEl = document.getElementById('todayCount');
+        const signupBtn = document.getElementById('signupBtn');
+        const loginBtn = document.getElementById('loginBtn');
+
+        // ============================================
+        // INITIALIZATION
+        // ============================================
+
+        // Fetch initial download counts from backend
+        fetchDownloadCounts();
+
+        // Check if user is already logged in
+        if (isLoggedIn && userData) {
+            showDownloadPage();
+        }
+
+        // ============================================
+        // API FUNCTIONS
+        // ============================================
+
+        async function fetchDownloadCounts() {
+            try {
+                const response = await fetch('/api/downloads/count');
+                const data = await response.json();
+                if (data.success) {
+                    downloadCountEl.textContent = data.total.toLocaleString();
+                    todayCountEl.textContent = data.today.toLocaleString();
+                }
+            } catch (error) {
+                console.error('Error fetching counts:', error);
+                // Fallback to 0 if API fails
+                downloadCountEl.textContent = '0';
+                todayCountEl.textContent = '0';
+            }
+        }
+
+        // ============================================
+        // SIGNUP HANDLER
+        // ============================================
+
+        async function handleSignup(event) {
+            event.preventDefault();
+
+            // Clear previous errors
+            clearErrors();
+
+            // Get input values
+            const username = document.getElementById('username').value.trim();
+            const email = document.getElementById('email').value.trim();
+            const password = document.getElementById('password').value.trim();
+
+            // Validation flags
+            let isValid = true;
+
+            // Validate username
+            if (!username) {
+                showError('username', 'usernameError', 'Username is required');
+                isValid = false;
+            }
+
+            // Validate email
+            if (!email || !isValidEmail(email)) {
+                showError('email', 'emailError', 'Valid email is required');
+                isValid = false;
+            }
+
+            // Validate password (minimum 6 characters)
+            if (!password || password.length < 6) {
+                showError('password', 'passwordError', 'Password must be at least 6 characters');
+                isValid = false;
+            }
+
+            if (!isValid) {
+                return;
+            }
+
+            // Show loading state
+            signupBtn.classList.add('loading');
+
+            try {
+                const response = await fetch('/api/signup', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ username, email, password })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    // Show success message
+                    document.getElementById('successText').textContent = data.message;
+                    successMessage.classList.add('show');
+
+                    // Save user data
+                    localStorage.setItem('userData', JSON.stringify(data.user));
+                    localStorage.setItem('isLoggedIn', 'true');
+                    isLoggedIn = true;
+                    userData = data.user;
+
+                    // Redirect to download page after short delay
+                    setTimeout(() => {
+                        showDownloadPage();
+                        successMessage.classList.remove('show');
+                        signupForm.reset();
+                    }, 1500);
+                } else {
+                    // Show error
+                    showError('email', 'emailError', data.message);
+                }
+            } catch (error) {
+                console.error('Signup error:', error);
+                showError('email', 'emailError', 'Server error. Please try again.');
+            } finally {
+                signupBtn.classList.remove('loading');
+            }
+        }
+
+        // ============================================
+        // LOGIN HANDLER
+        // ============================================
+
+        async function handleLogin(event) {
+            event.preventDefault();
+
+            // Clear previous errors
+            document.getElementById('loginEmailError').classList.remove('show');
+            document.getElementById('loginPasswordError').classList.remove('show');
+            document.getElementById('loginEmail').classList.remove('error');
+            document.getElementById('loginPassword').classList.remove('error');
+
+            // Get input values
+            const email = document.getElementById('loginEmail').value.trim();
+            const password = document.getElementById('loginPassword').value.trim();
+
+            // Validation flags
+            let isValid = true;
+
+            // Validate email
+            if (!email || !isValidEmail(email)) {
+                showError('loginEmail', 'loginEmailError', 'Valid email is required');
+                isValid = false;
+            }
+
+            // Validate password
+            if (!password) {
+                showError('loginPassword', 'loginPasswordError', 'Password is required');
+                isValid = false;
+            }
+
+            if (!isValid) {
+                return;
+            }
+
+            // Show loading state
+            loginBtn.classList.add('loading');
+
+            try {
+                const response = await fetch('/api/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ email, password })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    // Show success message
+                    document.getElementById('loginSuccessText').textContent = data.message;
+                    loginSuccessMessage.classList.add('show');
+
+                    // Save user data
+                    localStorage.setItem('userData', JSON.stringify(data.user));
+                    localStorage.setItem('isLoggedIn', 'true');
+                    isLoggedIn = true;
+                    userData = data.user;
+
+                    // Redirect to download page after short delay
+                    setTimeout(() => {
+                        showDownloadPage();
+                        loginSuccessMessage.classList.remove('show');
+                        loginForm.reset();
+                    }, 1500);
+                } else {
+                    // Show error
+                    showError('loginEmail', 'loginEmailError', data.message);
+                }
+            } catch (error) {
+                console.error('Login error:', error);
+                showError('loginEmail', 'loginEmailError', 'Server error. Please try again.');
+            } finally {
+                loginBtn.classList.remove('loading');
+            }
+        }
+
+        // ============================================
+        // DOWNLOAD HANDLER
+        // ============================================
+
+        async function handleDownload(event) {
+            // Prevent default to handle download recording first
+            event.preventDefault();
+
+            // Play button sound
+            playButtonSound();
+
+            const downloadLink = document.getElementById('downloadBtn');
+
+            try {
+                // Record download to backend
+                const response = await fetch('/api/downloads', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        userId: userData ? userData.id : null
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    // Update counter display with animation
+                    animateCounter(downloadCountEl, data.total);
+                    animateCounter(todayCountEl, data.today);
+                }
+            } catch (error) {
+                console.error('Error recording download:', error);
+            }
+
+            // Now open the download link
+            window.open(downloadLink.href, '_blank');
+        }
+
+        // ============================================
+        // VALIDATION FUNCTIONS
+        // ============================================
+
+        function isValidEmail(email) {
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            return emailRegex.test(email);
+        }
+
+        function showError(inputId, errorId, message) {
+            const input = document.getElementById(inputId);
+            const error = document.getElementById(errorId);
+            input.classList.add('error');
+            error.textContent = message;
+            error.classList.add('show');
+        }
+
+        function clearErrors() {
+            // Clear signup errors
+            document.querySelectorAll('.form-input').forEach(input => {
+                input.classList.remove('error');
+            });
+            document.querySelectorAll('.error-message').forEach(error => {
+                error.classList.remove('show');
+            });
+            successMessage.classList.remove('show');
+            loginSuccessMessage.classList.remove('show');
+        }
+
+        // Add real-time validation
+        document.getElementById('username').addEventListener('input', function () {
+            this.classList.remove('error');
+            document.getElementById('usernameError').classList.remove('show');
+        });
+
+        document.getElementById('email').addEventListener('input', function () {
+            this.classList.remove('error');
+            document.getElementById('emailError').classList.remove('show');
+        });
+
+        document.getElementById('password').addEventListener('input', function () {
+            this.classList.remove('error');
+            document.getElementById('passwordError').classList.remove('show');
+        });
+
+        document.getElementById('loginEmail').addEventListener('input', function () {
+            this.classList.remove('error');
+            document.getElementById('loginEmailError').classList.remove('show');
+        });
+
+        document.getElementById('loginPassword').addEventListener('input', function () {
+            this.classList.remove('error');
+            document.getElementById('loginPasswordError').classList.remove('show');
+        });
+
+        // ============================================
+        // PAGE NAVIGATION
+        // ============================================
+
+        function showDownloadPage() {
+            signupPage.style.display = 'none';
+            loginPage.style.display = 'none';
+            downloadPage.classList.add('active');
+            logoutBtn.classList.add('active');
+        }
+
+        function showSignup() {
+            loginPage.style.display = 'none';
+            signupPage.style.display = 'block';
+            clearErrors();
+        }
+
+        function showLogin() {
+            signupPage.style.display = 'none';
+            loginPage.style.display = 'block';
+            clearErrors();
+        }
+
+        // ============================================
+        // COUNTER ANIMATION
+        // ============================================
+
+        function animateCounter(element, targetValue) {
+            const currentValue = parseInt(element.textContent.replace(/,/g, '')) || 0;
+            const increment = (targetValue - currentValue) / 20;
+            let current = currentValue;
+
+            const timer = setInterval(() => {
+                current += increment;
+                if ((increment > 0 && current >= targetValue) || (increment < 0 && current <= targetValue)) {
+                    element.textContent = targetValue.toLocaleString();
+                    clearInterval(timer);
+                } else {
+                    element.textContent = Math.floor(current).toLocaleString();
+                }
+            }, 30);
+        }
+
+        // ============================================
+        // LOGOUT FUNCTION
+        // ============================================
+
+        function logout() {
+            localStorage.setItem('isLoggedIn', 'false');
+            isLoggedIn = false;
+            userData = null;
+            showSignup();
+        }
+    </script>
+</body>
+
+</html>
